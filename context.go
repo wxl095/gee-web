@@ -3,6 +3,7 @@ package gee
 import (
 	"encoding/json"
 	"fmt"
+	"gee/internal/bytesconv"
 	"net/http"
 )
 
@@ -73,7 +74,10 @@ func (c *Context) SetHeader(key string, value string) {
 func (c *Context) String(code int, format string, values ...interface{}) {
 	c.SetHeader("Content-Type", "text/plain")
 	c.Status(code)
-	c.Writer.Write([]byte(fmt.Sprintf(format, values...)))
+	if _, err := c.Writer.Write(bytesconv.StringsToBytes(fmt.Sprintf(format, values...))); err != nil {
+		http.Error(c.Writer, err.Error(), 500)
+		return
+	}
 }
 
 func (c *Context) JSON(code int, obj interface{}) {
@@ -87,7 +91,10 @@ func (c *Context) JSON(code int, obj interface{}) {
 
 func (c *Context) Data(code int, data []byte) {
 	c.Status(code)
-	c.Writer.Write(data)
+	if _, err := c.Writer.Write(data); err != nil {
+		http.Error(c.Writer, err.Error(), 500)
+		return
+	}
 }
 
 // HTML template render
